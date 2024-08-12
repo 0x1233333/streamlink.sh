@@ -32,3 +32,82 @@ streamlink转播命令
    - 使用文本编辑器（如 `nano` 或 `vim`）打开脚本，检查是否有这个 shebang 行。
 
 如果你确认了以上步骤后仍然出现错误，可以通过 `cat streamlink_auto_restart.sh` 命令检查脚本内容，并确认它确实是你想要执行的脚本。
+
+
+这些错误提示表明脚本文件可能存在几个问题：
+
+1. **行尾字符问题**：`$'\r': command not found` 表示脚本中包含了 Windows 风格的换行符（`\r\n`），而 Linux 使用的是 Unix 风格的换行符（`\n`）。这种问题通常发生在 Windows 环境中创建或编辑的脚本文件中。
+
+2. **语法错误**：`Syntax error: end of file unexpected (expecting "do")` 表示脚本文件中存在语法错误，可能是因为行尾字符问题或脚本编写不规范。
+
+### 解决步骤
+
+#### 1. **修复行尾字符**
+
+使用 `dos2unix` 工具将脚本的换行符从 Windows 风格转换为 Unix 风格：
+
+```bash
+sudo apt-get install dos2unix
+sudo dos2unix /root/streamlink_auto_restart.sh
+```
+
+#### 2. **检查和修复脚本内容**
+
+打开脚本文件并检查内容，确保没有语法错误。可以使用 `nano` 编辑器检查脚本：
+
+```bash
+sudo nano /root/streamlink_auto_restart.sh
+```
+
+确保脚本内容符合正确的 Bash 语法。例如，以下是一个简化且正确格式化的示例：
+
+```bash
+#!/bin/bash
+
+URL="https://www.youtube.com/watch?v=Nqs9iyn7tOo"
+PORT=6000
+QUALITY="best"
+RETRY_OPEN=30
+RETRY_MAX=0
+SEGMENT_TIMEOUT=600
+STREAM_TIMEOUT=900
+BUFFER_SIZE="64M"
+
+while true; do
+    echo "Starting streamlink..."
+    streamlink $URL $QUALITY \
+        --player-external-http \
+        --player-external-http-port $PORT \
+        --retry-open $RETRY_OPEN \
+        --retry-max $RETRY_MAX \
+        --stream-segment-timeout $SEGMENT_TIMEOUT \
+        --stream-timeout $STREAM_TIMEOUT \
+        --ringbuffer-size $BUFFER_SIZE
+
+    echo "Streamlink stopped. Restarting in 5 seconds..."
+    sleep 5
+done
+```
+
+#### 3. **保存并退出**
+
+- 在 `nano` 编辑器中，按 `Ctrl+O` 保存文件，按 `Enter` 确认。
+- 按 `Ctrl+X` 退出编辑器。
+
+#### 4. **重新赋予执行权限**
+
+确保文件有执行权限：
+
+```bash
+sudo chmod +x /root/streamlink_auto_restart.sh
+```
+
+#### 5. **再次尝试执行**
+
+使用 `bash` 或 `sh` 执行脚本：
+
+```bash
+sudo bash /root/streamlink_auto_restart.sh
+```
+
+如果脚本仍然无法运行，请仔细检查脚本的每一行，确保语法和格式都正确。
