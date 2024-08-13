@@ -1,0 +1,79 @@
+要实现自动检测特定 YouTube 用户是否在直播并自动获取直播链接，你可以使用 `yt-dlp`（一个强大的 YouTube 下载器）和 `streamlink`。下面是一个增强版的脚本示例，集成了这些功能。
+
+### 安装依赖工具
+
+首先，确保你安装了 `yt-dlp` 和 `streamlink`：
+
+```bash
+sudo apt-get update
+sudo apt-get install -y yt-dlp streamlink
+```
+
+### 脚本示例
+
+这个脚本会定期检查特定的 YouTube 用户是否在直播，如果发现直播，它将自动获取直播链接并使用 `streamlink` 播放。
+
+```bash
+#!/bin/bash
+
+# 配置
+CHANNEL_ID="UCXXXXXX"  # 替换为你要检测的 YouTube 用户频道 ID
+PORT=6000
+QUALITY="best"
+RETRY_OPEN=30
+RETRY_MAX=0
+SEGMENT_TIMEOUT=600
+STREAM_TIMEOUT=900
+BUFFER_SIZE="64M"
+CHECK_INTERVAL=60  # 检查间隔时间，单位为秒
+
+while true; do
+    echo "Checking for live stream..."
+    LIVE_URL=$(yt-dlp -g "https://www.youtube.com/channel/$CHANNEL_ID/live" --get-url)
+
+    if [[ $LIVE_URL == *"youtube"* ]]; then
+        echo "Live stream detected! Starting streamlink..."
+        streamlink $LIVE_URL $QUALITY \
+            --player-external-http \
+            --player-external-http-port $PORT \
+            --retry-open $RETRY_OPEN \
+            --retry-max $RETRY_MAX \
+            --stream-segment-timeout $SEGMENT_TIMEOUT \
+            --stream-timeout $STREAM_TIMEOUT \
+            --ringbuffer-size $BUFFER_SIZE
+
+        echo "Streamlink stopped. Restarting check in $CHECK_INTERVAL seconds..."
+    else
+        echo "No live stream detected. Checking again in $CHECK_INTERVAL seconds..."
+    fi
+
+    sleep $CHECK_INTERVAL
+done
+```
+
+### 如何使用
+
+1. **设置频道 ID**：将 `CHANNEL_ID="UCXXXXXX"` 替换为你要检测的 YouTube 用户的频道 ID。你可以在用户的 YouTube 频道 URL 中找到这个 ID，例如：`https://www.youtube.com/channel/UCXXXXXX`。
+
+2. **运行脚本**：保存脚本，并确保赋予执行权限：
+    ```bash
+    chmod +x /root/streamlink_auto_restart.sh
+    sudo bash /root/streamlink_auto_restart.sh
+    ```
+
+### 停止脚本
+
+- 在终端中按 `Ctrl+C` 停止脚本。
+- 或者使用 `kill` 命令终止后台运行的脚本，具体方法是先查找脚本的进程 ID (PID)，然后使用 `kill` 杀死该进程：
+    ```bash
+    ps aux | grep streamlink_auto_restart.sh
+    kill <PID>
+    ```
+
+### 解释
+
+- **`yt-dlp`**：用于获取直播视频的实际 URL。
+- **`CHANNEL_ID`**：指定的 YouTube 频道 ID，脚本会检查该频道是否在直播。
+- **`CHECK_INTERVAL`**：脚本每隔多久检查一次用户是否在直播。
+
+这个脚本自动检测特定用户的 YouTube 频道是否在直播，并在发现直播时自动启动 `streamlink` 播放直播视频。如果直播停止或链接失效，脚本会等待一段时间后再次检查。
