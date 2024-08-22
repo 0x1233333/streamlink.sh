@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 配置
-CHANNEL_ID="UCXXXXXX"  # 替换为你要检测的 YouTube 用户频道 ID
+CHANNEL_ID=UCrBrSyQaXOoPLICAzS69O3A  # 替换为你要检测的 YouTube 用户频道 ID
 PORT=6000
 QUALITY="best"
 RETRY_OPEN=30
