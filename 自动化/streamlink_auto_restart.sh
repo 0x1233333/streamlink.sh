@@ -13,9 +13,11 @@ CHECK_INTERVAL=60  # 检查间隔时间，单位为秒
 
 while true; do
     echo "Checking for live stream..."
-    LIVE_URL=$(yt-dlp -g "https://www.youtube.com/channel/$CHANNEL_ID/live" --get-url)
+    LIVE_URL=$(yt-dlp -q -g "https://www.youtube.com/channel/$CHANNEL_ID/live" --get-url)
 
-    if [[ $LIVE_URL == *"youtube"* ]]; then
+    if [[ -z $LIVE_URL ]]; then
+        echo "Failed to get live stream URL. Checking again in $CHECK_INTERVAL seconds..."
+    elif [[ $LIVE_URL == *"youtube"* ]]; then
         echo "Live stream detected! Starting streamlink..."
         streamlink $LIVE_URL $QUALITY \
             --player-external-http \
