@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 配置
-CHANNEL_ID=UCrBrSyQaXOoPLICAzS69O3A  # 替换为你要检测的 YouTube 用户频道 ID（426频道）
+CHANNEL_URL="https://www.youtube.com/@guanyuhan426"  # 替换为你要检测的 YouTube 频道链接
 PORT=6000
 QUALITY="best"
 RETRY_OPEN=30
@@ -13,12 +13,14 @@ CHECK_INTERVAL=60  # 检查间隔时间，单位为秒
 
 while true; do
     echo "Checking for live stream..."
-    LIVE_URL=$(yt-dlp -q -g "https://www.youtube.com/channel/$CHANNEL_ID/live" --get-url)
+    LIVE_URL=$(yt-dlp -q -g "${CHANNEL_URL}/live" --get-url)
+    echo "Live URL: $LIVE_URL"  # 调试信息
 
     if [[ -z $LIVE_URL ]]; then
         echo "Failed to get live stream URL. Checking again in $CHECK_INTERVAL seconds..."
-    elif [[ $LIVE_URL == *"youtube"* ]]; then
-        echo "Live stream detected! Starting streamlink..."
+    else
+        echo "Live stream URL detected: $LIVE_URL"
+        echo "Starting streamlink..."
         streamlink $LIVE_URL $QUALITY \
             --player-external-http \
             --player-external-http-port $PORT \
@@ -29,8 +31,6 @@ while true; do
             --ringbuffer-size $BUFFER_SIZE
 
         echo "Streamlink stopped. Restarting check in $CHECK_INTERVAL seconds..."
-    else
-        echo "No live stream detected. Checking again in $CHECK_INTERVAL seconds..."
     fi
 
     sleep $CHECK_INTERVAL
