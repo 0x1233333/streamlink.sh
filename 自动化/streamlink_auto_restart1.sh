@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # 配置
-API_KEY="YOUR_YOUTUBE_API_KEY"  # 替换为你的 YouTube API 密钥
+API_KEY="AIzaSyAXzFmqu5X0lb5gNchkRnbJaKiT3t_CHq4"  # 替换为你的 YouTube API 密钥
 CHANNEL_ID="UCbCCUH8S3yhlm7__rhxR2QQ"  # 替换为你要检测的 YouTube 频道 ID
+COOKIES_FILE="/root/cookies.txt"  # 替换为 cookies.txt 的实际路径
 PORT=6000
 QUALITY="best"
 RETRY_OPEN=30
@@ -11,6 +12,9 @@ SEGMENT_TIMEOUT=600
 STREAM_TIMEOUT=900
 BUFFER_SIZE="64M"
 CHECK_INTERVAL=60  # 检查间隔时间，单位为秒
+
+# 读取并清理 cookies 文件内容
+COOKIES=$(cat "$COOKIES_FILE" | tr -d '\r\n' | sed 's/; /; /g')
 
 while true; do
     echo "Checking for live stream..."
@@ -23,17 +27,19 @@ while true; do
         LIVE_URL="https://www.youtube.com/watch?v=$VIDEO_ID"
         echo "Live stream detected: $LIVE_URL"
         echo "Starting streamlink..."
-        streamlink $LIVE_URL $QUALITY \
+
+        streamlink "$LIVE_URL" "$QUALITY" \
+            --http-header "Cookie=$COOKIES" \
             --player-external-http \
-            --player-external-http-port $PORT \
-            --retry-open $RETRY_OPEN \
-            --retry-max $RETRY_MAX \
-            --stream-segment-timeout $SEGMENT_TIMEOUT \
-            --stream-timeout $STREAM_TIMEOUT \
-            --ringbuffer-size $BUFFER_SIZE
+            --player-external-http-port "$PORT" \
+            --retry-open "$RETRY_OPEN" \
+            --retry-max "$RETRY_MAX" \
+            --stream-segment-timeout "$SEGMENT_TIMEOUT" \
+            --stream-timeout "$STREAM_TIMEOUT" \
+            --ringbuffer-size "$BUFFER_SIZE"
 
         echo "Streamlink stopped. Restarting check in $CHECK_INTERVAL seconds..."
     fi
 
-    sleep $CHECK_INTERVAL
+    sleep "$CHECK_INTERVAL"
 done
