@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # 配置
-API_KEY=AIzaSyAXzFmqu5X0lb5NchkRnbJaKiT3t_CHq4  # 替换为你的 YouTube API 密钥
-CHANNEL_ID=UCbCCUH8S3yhlm7__rhxR2QQ  # 替换为你要检测的 YouTube 频道 ID
-COOKIES_FILE=/root/cookies.txt  # 替换为正确的 Netscape 格式 cookies.txt 路径
+API_KEY=123456789  # 替换为你的 YouTube API 密钥
+CHANNEL_ID=UCknCiFBy4pQTphwgyj2aa7A  # 替换为你要检测的 YouTube 频道 ID
+COOKIES_FILE=/root/cookies.txt  # 替换为 cookies.txt 的实际路径
 PORT=6000
 QUALITY="best"
 RETRY_OPEN=30
@@ -24,15 +24,14 @@ while true; do
         LIVE_URL="https://www.youtube.com/watch?v=$VIDEO_ID"
         echo "Live stream detected: $LIVE_URL"
 
-        # 使用 yt-dlp 提取实际流 URL
         echo "Extracting stream URL using yt-dlp..."
         STREAM_URL=$(yt-dlp -g --cookies "$COOKIES_FILE" "$LIVE_URL")
 
-        if [[ -z $STREAM_URL || $STREAM_URL == "null" ]]; then
+        if [[ -z $STREAM_URL ]]; then
             echo "Failed to extract stream URL. Retrying in $CHECK_INTERVAL seconds..."
         else
             echo "Starting streamlink..."
-            streamlink "$STREAM_URL" $QUALITY \
+            streamlink "$STREAM_URL" "$QUALITY" \
                 --player-external-http \
                 --player-external-http-port $PORT \
                 --retry-open $RETRY_OPEN \
@@ -41,6 +40,8 @@ while true; do
                 --stream-timeout $STREAM_TIMEOUT \
                 --ringbuffer-size $BUFFER_SIZE
         fi
+
+        echo "Streamlink stopped. Restarting check in $CHECK_INTERVAL seconds..."
     fi
 
     sleep $CHECK_INTERVAL
